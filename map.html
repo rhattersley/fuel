@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>Fuel prices</title>
+	
+    <!--
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    -->
+    <link rel="stylesheet" href="leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		.leaflet-container {
+            height: 100%;
+			width: 100%;
+			max-width: 100%;
+			max-height: 100%;
+		}
+        .options {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .options h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
+        .leaflet-popup-container h4 {
+            margin: 0 0 5px;
+        }
+	</style>
+
+	
+</head>
+<body class="">
+
+<div id="map"></div>
+
+<script type="module">
+    const fuels = [
+        {"label": "Petrol", "name": "E10"},
+        {"label": "Diesel", "name": "B7"},
+        {"label": "Super", "name": "E5"}
+    ];
+
+    const zoom = 10;
+	const map = L.map('map').setView([50.50, -3.67], zoom);
+
+    L.Control.FuelType = L.Control.extend({
+        fuel: "E10",
+        _inputs: [],
+
+        onAdd: function(map) {
+            var div = L.DomUtil.create('div', 'options');
+            var heading = L.DomUtil.create('h4');
+            heading.innerHTML = 'Fuel type';
+            div.append(heading);
+            fuels.forEach(fuel => {
+                var p = L.DomUtil.create('p');
+                var input = L.DomUtil.create('input');
+                input.type = 'radio';
+                input.name = 'fuel';
+                input.id = fuel.name;
+                if (fuel.name == this.fuel) {
+                    input.checked = true;
+                }
+                p.append(input);
+                var label = L.DomUtil.create('label');
+                label.for = fuel.name;
+                label.innerHTML = fuel.label;
+                p.append(label);
+                div.append(p);
+
+                this._inputs.push(input);
+                L.DomEvent.on(input, 'click', event => {
+                    this.fuel = event.target.id;
+                    restyle();
+                    L.DomEvent.stopPropagation(event);
+                });
+            });
+            return div;
+        },
+
+        onRemove: function(map) {
+            this._inputs.forEach(input => {
+                L.DomEvent.off(input, 'click');
+            });
+            this._inputs = [];
+        }
+    });
+
+    L.control.fuelType = function(opts) {
+        return new L.Control.FuelType(opts);
+    }
+
+    var fuelType = L.control.fuelType({position: 'topright'}).addTo(map);
+
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+
+    const url = "https://rhattersley.github.io/fuel-data/all.json";
+    const response = await fetch(url);
+    const details = await response.json();
+    const station_lists = details.retailers.map(retailer => {
+        return retailer.data.stations.map(station => {
+            return {
+                "brand": station.brand,
+                "location": station.location,
+                "prices": station.prices
+            }
+        });
+    });
+    const stations = station_lists.reduce((a, b) => a.concat(b));
+
+    var min, max;
+
+    function setRange() {
+        var prices = stations.filter(station => {
+                return station.prices[fuelType.fuel] > 0;
+            })
+            .map(station => {return station.prices[fuelType.fuel]})
+            .sort();
+        prices = prices.slice(prices.length * 0.1, prices.length * 0.9);
+        min = prices.reduce((a, b) => {return Math.min(a, b)});
+        max = prices.reduce((a, b) => {return Math.max(a, b)});
+    }
+    setRange();
+
+    function stationStyle(station) {
+        const price = station.prices[fuelType.fuel];
+        if (price > 0) {
+            // HSL interpolation
+            const H = 120 * (1 - Math.min(Math.max((price - min) / (max - min), 0), 1));
+            const S = 1.0;
+            const L = 0.5;
+            const f = n => {
+                const k = (n + H/30) % 12;
+                const a = S * Math.min(L, 1 - L);
+                return L - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+            }
+            const R = f(0);
+            const G = f(8);
+            const B = f(4);
+            const Rh = ("0" + Math.round(R * 255).toString(16)).slice(-2);
+            const Gh = ("0" + Math.round(G * 255).toString(16)).slice(-2);
+            return {fillColor: `#${Rh}${Gh}00`, fillOpacity: 0.8, opacity: 1.0}
+        } else {
+            return {fillColor: '#888', fillOpacity: 0.2, opacity: 0.2};
+        }
+    }
+
+    function displayPrices(stations) {
+        const basicStyle = {
+            radius: 8,
+            color: '#000',
+            weight: 1,
+        };
+        stations.forEach(station => {
+            const marker = L.circleMarker(
+                [station.location.latitude, station.location.longitude],
+                {...basicStyle, ...stationStyle(station)}
+            );
+            station.marker = marker;
+            marker.addTo(map);
+            // TODO: Deal with "undefined" / "null" values.
+            // Iterate over `fuels`?
+            var rows = fuels.map(fuel => {
+                var price = station.prices[fuel.name];
+                if (!(price > 0)) {
+                    price = 'N/A';
+                }
+                return `${fuel.label}: ${price}`
+            });
+            marker.bindPopup(`<h4>${station.brand}</h4>` + rows.join('<br>')); // Petrol: ${station.prices.E10}<br>Diesel: ${station.prices.B7}<br>Super: ${station.prices.E5}`);
+        });
+    }
+
+    displayPrices(stations);
+
+    function restyle() {
+        setRange();
+        stations.forEach(station => {
+            station.marker.setStyle(stationStyle(station));
+        });
+    }
+</script>
+
+</body></html>
