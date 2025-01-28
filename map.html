@@ -189,6 +189,7 @@
                 `<h4>${station.brand}</h4>`
                 + rows.join('<br>')
                 + `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}">dir</a>`
+                + `<br><a onClick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}')">open</a>`
             );
         });
     }
