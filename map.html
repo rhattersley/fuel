@@ -119,7 +119,10 @@
             return {
                 "brand": station.brand,
                 "location": station.location,
-                "prices": station.prices
+                "prices": station.prices,
+                "brand": station.brand,
+                "address": station.address,
+                "postcode": station.postcode
             }
         });
     });
@@ -185,7 +188,7 @@
             marker.bindPopup(
                 `<h4>${station.brand}</h4>`
                 + rows.join('<br>')
-                + `<br><a href="geo:${station.location.latitude},${station.location.longitude}">go</a>`
+                + `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}">dir</a>`
             );
         });
     }
