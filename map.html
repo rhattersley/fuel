@@ -36,7 +36,7 @@
             margin: 0 0 5px;
             color: #777;
         }
-        .leaflet-popup-container h4 {
+        .leaflet-popup-content h4 {
             margin: 0 0 5px;
         }
 	</style>
@@ -175,8 +175,6 @@
             );
             station.marker = marker;
             marker.addTo(map);
-            // TODO: Deal with "undefined" / "null" values.
-            // Iterate over `fuels`?
             var rows = fuels.map(fuel => {
                 var price = station.prices[fuel.name];
                 if (!(price > 0)) {
@@ -184,7 +182,11 @@
                 }
                 return `${fuel.label}: ${price}`
             });
-            marker.bindPopup(`<h4>${station.brand}</h4>` + rows.join('<br>')); // Petrol: ${station.prices.E10}<br>Diesel: ${station.prices.B7}<br>Super: ${station.prices.E5}`);
+            marker.bindPopup(
+                `<h4>${station.brand}</h4>`
+                + rows.join('<br>')
+                + `<br><a href="geo:${station.location.latitude},${station.location.longitude}">go</a>`
+            );
         });
     }
 
