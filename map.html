@@ -24,20 +24,35 @@
 			max-width: 100%;
 			max-height: 100%;
 		}
-        .options {
-            padding: 6px 8px;
-            font: 14px/16px Arial, Helvetica, sans-serif;
+
+        .info {
             background: white;
-            background: rgba(255,255,255,0.8);
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            color: #555;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            line-height: 18px;
+            padding: 6px 8px;
         }
-        .options h4 {
-            margin: 0 0 5px;
-            color: #777;
+
+        .options p {
+            margin: 0px;
         }
+
+        .options input {
+            height: 1.3em;
+            width: 1.3em;
+        }
+
         .leaflet-popup-content h4 {
             margin: 0 0 5px;
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
         }
 	</style>
 
@@ -66,10 +81,7 @@
         _inputs: [],
 
         onAdd: function(map) {
-            var div = L.DomUtil.create('div', 'options');
-            var heading = L.DomUtil.create('h4');
-            heading.innerHTML = 'Fuel type';
-            div.append(heading);
+            var div = L.DomUtil.create('div', 'info options');
             fuels.forEach(fuel => {
                 var p = L.DomUtil.create('p');
                 var input = L.DomUtil.create('input');
@@ -109,6 +121,16 @@
     }
 
     var fuelType = L.control.fuelType({position: 'topright'}).addTo(map);
+
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function(map) {
+        var div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML = '<i style="background:#00ff00"></i>Cheap<br>';
+        div.innerHTML += '<i style="background:#ffff00"></i>OK<br>';
+        div.innerHTML += '<i style="background:#ff0000"></i>Pricey';
+        return div;
+    }
+    legend.addTo(map);
 
 	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
@@ -171,7 +193,7 @@
 
     function displayPrices(stations) {
         const basicStyle = {
-            radius: 8,
+            radius: 12,
             color: '#000',
             weight: 1,
         };
