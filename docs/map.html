@@ -69,8 +69,26 @@
         {"label": "Super", "name": "E5"}
     ];
 
-    const colormap_response = await fetch("colormap.json");
+    const colormap_response = await fetch("colormaps/plasma.json");
     const colormap_data = await colormap_response.json();
+
+    function colormap(price_fraction) {
+        const i = Math.round(255 * price_fraction);
+        const rgb = colormap_data[i];
+        const Rh = ("0" + Math.round(rgb[0] * 255).toString(16)).slice(-2);
+        const Gh = ("0" + Math.round(rgb[1] * 255).toString(16)).slice(-2);
+        const Bh = ("0" + Math.round(rgb[2] * 255).toString(16)).slice(-2);
+        return `#${Rh}${Gh}${Bh}`;
+    }
+
+    function priceStyle(price_fraction) {
+        return {
+            fillColor: colormap(price_fraction),
+            fillOpacity: 0.4 + 0.6 * price_fraction,
+            opacity: 1.0,
+            radius: 8 + 6 * price_fraction
+        };
+    }
 
     const zoom = 10;
 	const map = L.map('map');
@@ -125,10 +143,10 @@
 
     var fuelType = L.control.fuelType({position: 'topright'}).addTo(map);
 
-    function legendItem(colour, opacity, radius, label) {
+    function legendItem(style, label) {
         return `<svg>
   <g>
-    <path stroke="#555" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="${colour}" fill-opacity="${opacity}" fill-rule="evenodd" d="M${15-radius},16a${radius},${radius} 0 1,0 ${radius*2},0 a${radius},${radius} 0 1,0 -${radius*2},0 "></path>
+    <path stroke="#555" stroke-opacity="1" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="${style.fillColor}" fill-opacity="${style.fillOpacity}" fill-rule="evenodd" d="M${15-style.radius},16a${style.radius},${style.radius} 0 1,0 ${style.radius*2},0 a${style.radius},${style.radius} 0 1,0 -${style.radius*2},0 "></path>
   </g>
 </svg>${label}`
     }
@@ -136,9 +154,10 @@
     var legend = L.control({position: 'bottomright'});
     legend.onAdd = function(map) {
         var div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML += legendItem('#ffff00', 1, 14, 'Cheap') + '<br>';
-        div.innerHTML += legendItem('#208f8c', 0.7, 11, 'OK') + '<br>';
-        div.innerHTML += legendItem('#440154', 0.4, 8, 'Pricey');
+        div.innerHTML = legendItem(priceStyle(1), 'Cheap') + '<br>'
+            + legendItem(priceStyle(0.67), '') + '<br>'
+            + legendItem(priceStyle(0.33), '') + '<br>'
+            + legendItem(priceStyle(0), 'Pricey');
         return div;
     }
     legend.addTo(map);
@@ -179,25 +198,11 @@
     }
     setRange();
 
-    function colormap(price_fraction) {
-        const i = Math.round(255 * price_fraction);
-        const rgb = colormap_data[i];
-        const Rh = ("0" + Math.round(rgb[0] * 255).toString(16)).slice(-2);
-        const Gh = ("0" + Math.round(rgb[1] * 255).toString(16)).slice(-2);
-        const Bh = ("0" + Math.round(rgb[2] * 255).toString(16)).slice(-2);
-        return `#${Rh}${Gh}${Bh}`;
-    }
-
     function stationStyle(station) {
         const price = station.prices[fuelType.fuel];
         if (price > 0) {
             const price_fraction = 1 - Math.min(Math.max((price-min)/(max-min), 0), 1);
-            return {
-                fillColor: colormap(price_fraction),
-                fillOpacity: 0.4 + 0.6 * price_fraction,
-                opacity: 1.0,
-                radius: 8 + 6 * price_fraction
-            };
+            return priceStyle(price_fraction);
         } else {
             return {fillColor: '#888', fillOpacity: 0.2, opacity: 0.2};
         }
