@@ -47,6 +47,14 @@
         .leaflet-popup-content h4 {
             margin: 0 0 5px;
         }
+        .leaflet-popup-content a {
+            display: block;
+            margin-top: 6px;
+            width: 100%;
+        }
+        .leaflet-popup-content img {
+            width: 32px;
+        }
 
         .legend svg {
             height: 32px;
@@ -231,8 +239,7 @@
             marker.bindPopup(
                 `<h4>${station.brand}</h4>`
                 + rows.join('<br>')
-                + `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}">dir</a>`
-                + `<br><a onClick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}')">open</a>`
+                + `<br><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.brand + ", " + station.address + ", " + station.postcode)}" target="_blank"><img src="car.png"></a>`
             );
         });
     }
