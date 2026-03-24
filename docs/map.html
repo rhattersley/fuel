@@ -160,7 +160,8 @@
     legend.onAdd = function(map) {
         var div = L.DomUtil.create('div', 'info legend');
         div.innerHTML = legendItem(priceStyle(1, 0), 'Cheap') + '<br>'
-            + legendItem(priceStyle(0.5, 0), '') + '<br>'
+            + legendItem(priceStyle(0.67, 0), '') + '<br>'
+            + legendItem(priceStyle(0.33, 0), '') + '<br>'
             + legendItem(priceStyle(0, 0), 'Pricey') + '<br>' + '<br>'
             + legendItem(priceStyle(0.33, 0), 'Fresh') + '<br>'
             + legendItem(priceStyle(0.33, 10), 'Stale');
