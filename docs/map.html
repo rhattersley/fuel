@@ -52,11 +52,24 @@
             width: 32px;
         }
 
+        .legend {
+            align-items: end;
+            background: none;
+            box-shadow: none;
+            display: flex;
+        }
         .legend svg {
             height: 32px;
             margin-right: 2px;
             vertical-align: middle;
             width: 32px;
+        }
+        .legend div {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            margin-left: 1em;
+            padding: inherit;
         }
     </style>
 </head>
@@ -159,12 +172,16 @@
     var legend = L.control({position: 'bottomright'});
     legend.onAdd = function(map) {
         var div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML = legendItem(priceStyle(1, 0), 'Cheap') + '<br>'
+        div.innerHTML = '<div>'
+            + legendItem(priceStyle(1, 0), 'Updated today') + '<br>'
+            + legendItem(priceStyle(1, 10), 'Updated a week ago')
+            + '</div>'
+            + '<div>'
+            + legendItem(priceStyle(1, 0), 'Cheap') + '<br>'
             + legendItem(priceStyle(0.67, 0), '') + '<br>'
             + legendItem(priceStyle(0.33, 0), '') + '<br>'
-            + legendItem(priceStyle(0, 0), 'Pricey') + '<br>' + '<br>'
-            + legendItem(priceStyle(0.33, 0), 'Fresh') + '<br>'
-            + legendItem(priceStyle(0.33, 10), 'Stale');
+            + legendItem(priceStyle(0, 0), 'Pricey')
+            + '</div>';
         return div;
     }
     legend.addTo(map);
