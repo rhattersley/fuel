@@ -109,6 +109,8 @@
         const ageFraction = (7.0 - clampedAge) / 7;
         return {
             fillColor: colormap(priceFraction),
+            fillOpacity: 1,
+            opacity: 1,
             radius: 8 + 6 * priceFraction
         };
     }
